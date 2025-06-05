@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Embed Google Apps Script Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      margin: 20px 0;
+      color: #333;
+    }
+    iframe {
+      width: 100%;
+      max-width: 960px;
+      height: 700px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Google Apps Script Web App Embedded</h1>
+  <iframe 
+    src="https://script.google.com/macros/s/AKfycbxeQu8cTDHQTa0A1UJMYD3JOFCb17YkwzoFpTvoXQclHWM7Vcw6zSEQBw5xizaxsWCvwg/exec" 
+    allowfullscreen
+    title="Google Apps Script Web App"
+  ></iframe>
+</body>
+</html>
