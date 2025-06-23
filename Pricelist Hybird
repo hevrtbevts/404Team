@@ -1,0 +1,423 @@
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile("Index")
+    .setTitle("Aplikasi List Harga")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getHargaData() {
+  const ss = SpreadsheetApp.openById("16MEtVRu3Vv3-6JEw46xndUisFy7Uo7ZMT86BucWeQOc");
+  return ss.getSheetByName("List Harga").getDataRange().getValues().slice(1);
+}
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Gaya dasar untuk mobile (mobile-first) */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f5f5f5;
+      font-size: 14px;
+    }
+    #searchBox {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    #hargaTable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7px; /* Teks diperkecil menjadi 7px */
+      background: white;
+      display: table; /* Tampilan tabel standar */
+      overflow-x: auto; /* Scroll horizontal untuk layar kecil */
+    }
+    #hargaTable th,
+    #hargaTable td {
+      border: 1px solid #ddd;
+      padding: 2px; /* Padding disesuaikan untuk teks 7px */
+      text-align: left;
+      white-space: nowrap; /* Hindari teks memecah baris */
+    }
+    #hargaTable th {
+      background: #007BFF;
+      color: white;
+    }
+    #hargaTable tr:nth-child(even) { /* Efek zebra untuk baris genap */
+      background-color: #f9f9f9;
+    }
+    #hargaTable tr:nth-child(odd) { /* Efek zebra untuk baris ganjil */
+      background-color: #ffffff;
+    }
+    #hargaTable tr:hover {
+      background: #f0f8ff;
+      cursor: pointer;
+    }
+    /* Modal Pop-up (lebih kecil) */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto; /* Posisi lebih rendah untuk mobile */
+      padding: 10px; /* Padding lebih kecil */
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 300px; /* Ukuran lebih kecil */
+      border-radius: 4px;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .close {
+      position: absolute;
+      right: 8px;
+      top: 4px;
+      color: #aaa;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: black;
+    }
+    .form-group {
+      margin-bottom: 8px; /* Margin lebih kecil */
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 2px;
+      font-weight: bold;
+      font-size: 12px; /* Font lebih kecil */
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 4px; /* Padding lebih kecil */
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px; /* Font lebih kecil */
+      box-sizing: border-box;
+    }
+    .result-box {
+      background: #f0f0f0;
+      padding: 6px; /* Padding lebih kecil */
+      border-radius: 4px;
+      margin: 8px 0;
+      font-size: 12px; /* Font lebih kecil */
+    }
+    .copy-btn {
+      display: block;
+      width: 100%;
+      padding: 6px; /* Padding lebih kecil */
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px; /* Font lebih kecil */
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .copy-btn:hover {
+      background-color: #0056b3;
+    }
+    /* Media query untuk layar besar (tablet/desktop) */
+    @media (min-width: 768px) {
+      body {
+        font-size: 16px;
+        padding: 20px;
+      }
+      #searchBox {
+        padding: 10px;
+        font-size: 16px;
+      }
+      #hargaTable th,
+      #hargaTable td {
+        padding: 4px; /* Padding sedikit lebih besar untuk desktop */
+      }
+      .modal-content {
+        padding: 15px;
+        max-width: 400px;
+        margin: 5% auto;
+      }
+      .close {
+        font-size: 24px;
+        right: 15px;
+        top: 10px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+      .form-group input,
+      .form-group select {
+        padding: 8px;
+        font-size: 14px;
+      }
+      .result-box {
+        padding: 10px;
+        margin: 15px 0;
+        font-size: 14px;
+      }
+      .copy-btn {
+        padding: 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h3 style="text-align:center; color:#007BFF;">List Harga Produk</h3>
+  <input type="text" id="searchBox" placeholder="Cari produk...">
+  <div style="overflow-x: auto; max-height:80vh; overflow-y: auto;">
+    <table id="hargaTable">
+      <thead>
+        <tr>
+          <th>MERK</th>
+          <th>MODEL</th>
+          <th>KET</th>
+          <th>BONUS</th>
+          <th>TYPE</th>
+          <th>STK</th>
+          <th>MODAL</th>
+          <th>SPEK/FITUR</th>
+        </tr>
+      </thead>
+      <tbody id="hargaBody"></tbody>
+    </table>
+  </div>
+  <!-- Modal Simulasi -->
+  <div id="simulasiModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h3 style="text-align:center; color:#007BFF; margin-top:0; font-size: 14px;">Simulasi Angsuran</h3>
+      <div class="form-group">
+        <label for="modal">Modal (Rp dalam ribuan)</label>
+        <input type="number" id="modal" placeholder="Masukkan Modal dalam ribuan" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="dp">DP (Rp dalam ribuan)</label>
+        <input type="number" id="dp" placeholder="Masukkan DP dalam ribuan" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="tipe">Tipe Produk</label>
+        <select id="tipe">
+          <option value="">Pilih tipe</option>
+          <option value="HP">HP</option>
+          <option value="Royal">Royal</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Guhdo">Guhdo</option>
+          <option value="Elektronik">Elektronik</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="hari">Tenor (Hari)</label>
+        <select id="hari">
+          <option value="">Pilih tenor</option>
+          <option value="30">30</option>
+          <option value="60">60</option>
+          <option value="90">90</option>
+          <option value="120">120</option>
+          <option value="150">150</option>
+          <option value="180">180</option>
+        </select>
+      </div>
+      <div class="result-box" id="output">
+        <strong>Angsuran/Hari:</strong> -
+      </div>
+      <h4 style="margin-bottom:8px; font-size: 12px;">Simulasi Potongan</h4>
+      <div class="form-group">
+        <label for="nawar">Harga Nawar (Rp dalam ribuan)</label>
+        <input type="number" id="nawar" placeholder="Masukkan harga nawar dalam ribuan" min="0" step="0.01">
+      </div>
+      <div class="result-box" id="simulasiOutput">
+        <strong>Estimasi Potongan/DP:</strong> -
+      </div>
+      <button class="copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+    </div>
+  </div>
+  <script>
+    let selectedRowData = {}; // Variabel global untuk menyimpan data baris yang diklik
+
+    document.addEventListener("DOMContentLoaded", function() {
+      google.script.run.withSuccessHandler(updateHargaTable).getHargaData();
+    });
+
+    function updateHargaTable(data) {
+      const tbody = document.getElementById("hargaBody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row[0] || ''}</td> <!-- MERK -->
+          <td>${row[1] || ''}</td> <!-- MODEL -->
+          <td>${row[2] || ''}</td> <!-- KET -->
+          <td>${row[3] || ''}</td> <!-- BONUS -->
+          <td>${row[4] || ''}</td> <!-- TYPE -->
+          <td>${row[5] || ''}</td> <!-- STK -->
+          <td>${row[6] || ''}</td> <!-- MODAL -->
+          <td>${row[7] || ''}</td> <!-- SPEK/FITUR -->
+        `;
+        tr.addEventListener("click", function() {
+          document.getElementById("modal").value = row[6] || ''; // Gunakan nilai asli dari tabel dalam ribuan
+          document.getElementById("tipe").value = row[4] || '';
+          document.getElementById("simulasiModal").style.display = "block";
+          hitung();
+          // Simpan data baris ke variabel global
+          selectedRowData = {
+            model: row[1] || '',
+            merk: row[0] || '',
+            ket: row[2] || '',
+            type: row[4] || ''
+          };
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("searchBox").addEventListener("input", function() {
+      const input = this.value.toLowerCase().trim();
+      const rows = document.querySelectorAll("#hargaBody tr");
+      rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        const rowText = Array.from(cells)
+          .map(cell => cell.textContent.toLowerCase())
+          .join(" ");
+        row.style.display = rowText.includes(input) ? "" : "none";
+      });
+    });
+
+    function closeModal() {
+      document.getElementById("simulasiModal").style.display = "none";
+    }
+
+    function formatRupiah(angka) {
+      return `Rp ${Math.round(angka).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+    }
+
+    const marginRules = {
+      HP: [{ max: 60, margin: 0.26 }, { max: 120, margin: 0.41 }],
+      Royal: [{ max: 90, margin: 0.36 }, { max: 180, margin: 0.51 }],
+      Furniture: [{ max: 90, margin: 0.36 }, { max: 180, margin: 0.51 }],
+      Guhdo: [{ max: 90, margin: 0.46 }, { max: 180, margin: 0.66 }],
+      Elektronik: [{ max: 90, margin: 0.31 }, { max: 180, margin: 0.46 }]
+    };
+
+    const potonganRules = {
+      Royal: 0.17,
+      Guhdo: 0.38
+    };
+
+    function hitung() {
+      const modalInput = parseFloat(document.getElementById("modal").value) || 0;
+      const dpInput = parseFloat(document.getElementById("dp").value) || 0;
+      const modal = modalInput * 1000; // Konversi dari ribuan ke rupiah
+      const dp = dpInput * 1000; // Konversi dari ribuan ke rupiah
+      const tipe = document.getElementById("tipe").value;
+      const hari = parseInt(document.getElementById("hari").value);
+
+      // Validasi input
+      if (modal <= 0 || dp < 0 || dp > modal || !tipe || !hari) {
+        document.getElementById("output").innerHTML = `<strong>Angsuran/Hari:</strong> -`;
+        document.getElementById("simulasiOutput").innerHTML = `<strong>Estimasi Potongan/DP:</strong> -`;
+        return;
+      }
+
+      const potongan = potonganRules[tipe] || 0;
+      const margin = marginRules[tipe]?.find(r => hari <= r.max)?.margin || 0;
+
+      const dasar = ["Royal", "Guhdo"].includes(tipe) ? (modal * (1 - potongan)) - dp : modal - dp;
+      if (dasar <= 0) {
+        document.getElementById("output").innerHTML = `<strong>Angsuran/Hari:</strong> -`;
+        document.getElementById("simulasiOutput").innerHTML = `<strong>Estimasi Potongan/DP:</strong> -`;
+        return;
+      }
+
+      const hasil = dasar * (1 + margin) / hari;
+
+      document.getElementById("output").innerHTML = `<strong>Angsuran/Hari:</strong> ${formatRupiah(hasil)}`;
+
+      const nawarInput = parseFloat(document.getElementById("nawar").value) || 0;
+      const nawar = nawarInput * 1000; // Konversi dari ribuan ke rupiah
+      if (nawar && hasil > nawar) {
+        const selisih = (hasil - nawar) * hari / (1 + margin);
+        document.getElementById("simulasiOutput").innerHTML = `<strong>Estimasi Potongan/DP:</strong> ${formatRupiah(selisih)}`;
+      } else {
+        document.getElementById("simulasiOutput").innerHTML = `<strong>Estimasi Potongan/DP:</strong> -`;
+      }
+    }
+
+    function copyToClipboard() {
+      const model = selectedRowData.model || '';
+      const merk = selectedRowData.merk || '';
+      const ket = selectedRowData.ket || '';
+      const type = selectedRowData.type || '';
+      const dpInput = parseFloat(document.getElementById("dp").value) || 0;
+      const dp = dpInput * 1000; // Konversi DP dari ribuan ke rupiah
+      const angsuranOutput = parseFloat(document.getElementById("output").textContent.replace('Angsuran/Hari: ', '').replace('Rp ', '').replace(/\./g, '')) || 0;
+      const nawarInput = parseFloat(document.getElementById("nawar").value) || 0;
+      const nawar = nawarInput * 1000; // Konversi nawar dari ribuan ke rupiah
+      const hari = document.getElementById("hari").value || '';
+      const estimasi = parseFloat(document.getElementById("simulasiOutput").textContent.replace('Estimasi Potongan/DP: ', '').replace('Rp ', '').replace(/\./g, '')) || 0;
+
+      // Hitung DP total, dimulai dari dp dan tambahkan estimasi jika ada
+      let dpTotal = dp;
+      if (nawarInput && estimasi > 0) {
+        dpTotal += estimasi; // Jumlahkan tanpa konversi berulang
+      }
+
+      const dpFormatted = formatRupiah(dpTotal);
+      const angsuran = nawarInput > 0 ? formatRupiah(nawar) : formatRupiah(angsuranOutput);
+
+      const textToCopy = `
+Model: ${model}
+Merk: ${merk}
+Keterangan: ${ket}
+Type: ${type}
+DP: ${dpFormatted}
+Angsuran/Hari: ${angsuran}
+Tenor (Hari): ${hari}
+      `.trim();
+
+      if (!textToCopy || textToCopy === '\n') {
+        alert("Tidak ada data untuk disalin!");
+        return;
+      }
+
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => alert("Teks berhasil disalin ke clipboard!"))
+        .catch(err => alert("Gagal menyalin teks: " + err));
+    }
+
+    document.querySelectorAll("#modal, #dp, #tipe, #hari, #nawar").forEach(el => {
+      el.addEventListener("input", hitung);
+    });
+  </script>
+</body>
+</html>
+
+
+
+    
+
+
